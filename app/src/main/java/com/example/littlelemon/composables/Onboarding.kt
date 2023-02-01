@@ -1,5 +1,6 @@
 package com.example.littlelemon.composables
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 
 
 import androidx.compose.ui.res.painterResource
@@ -17,7 +19,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.example.littlelemon.R
+import com.example.littlelemon.routes.Home
 import com.example.littlelemon.ui.theme.Black
 import com.example.littlelemon.ui.theme.LittleLemonTheme
 import com.example.littlelemon.ui.theme.Secondary
@@ -25,8 +29,10 @@ import com.example.littlelemon.ui.theme.Yellow
 
 
 @Composable
-fun Onboarding() {
+fun OnboardingScreen(navController: NavController) {
+
     Column( horizontalAlignment = Alignment.CenterHorizontally) {
+        val context = LocalContext.current
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = stringResource(id = R.string.logo_content),
@@ -43,10 +49,20 @@ fun Onboarding() {
                 Modifier.fillMaxWidth(1F),
                 color= Color.White, textAlign = TextAlign.Center)
         }
-        var firstName = remember{ mutableStateOf("Tilly") }
+        var firstName = remember{ mutableStateOf("") }
         var name = remember{ mutableStateOf("") }
         var email = remember{ mutableStateOf("") }
 
+        fun validateData(){
+            if(firstName.value.isBlank()||name.value.isBlank()||email.value.isBlank()){
+                Toast.makeText(context,context.getString(R.string.data_not_filled),Toast.LENGTH_LONG).show()
+
+            }else{
+                navController.navigate(Home.route)
+            }
+
+
+        }
         Column(modifier = Modifier
             .padding(0.dp, 20.dp, 0.dp, 20.dp)
             .fillMaxWidth(1F)
@@ -58,18 +74,22 @@ fun Onboarding() {
             OutlinedTextField(value = email.value, onValueChange = {text -> email.value=text},modifier= Modifier.fillMaxWidth(0.95f),label={Text(stringResource(id = R.string.email))})
 
         }
-        Button(onClick = { /*TODO*/ },colors = ButtonDefaults.buttonColors(backgroundColor = Yellow), modifier = Modifier.fillMaxWidth(0.9f)) {
+        Button(onClick = {
+            validateData()
+        },colors = ButtonDefaults.buttonColors(backgroundColor = Yellow), modifier = Modifier.fillMaxWidth(0.9f)) {
             Text(text = stringResource(id = R.string.register))
         }
 
 
     }
+
 }
+
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
     LittleLemonTheme {
-        Onboarding()
+//        OnboardingScreen(null)
     }
 }

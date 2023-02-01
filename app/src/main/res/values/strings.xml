@@ -6,4 +6,7 @@
     <string name="first_name">First name</string>
     <string name="name">Name</string>
     <string name="email">Email</string>
+    <string name="data_not_filled">Registration unsuccessful. Please enter all data.</string>
+    <string name="logout">Log out</string>
+    <string name="profile_content">Profile content</string>
 </resources>
