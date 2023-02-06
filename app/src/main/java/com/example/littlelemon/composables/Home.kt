@@ -6,12 +6,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
-import androidx.compose.material.Divider
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,7 +26,10 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.room.Room
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
@@ -35,25 +38,56 @@ import com.example.littlelemon.LittleLemonDatabase
 import com.example.littlelemon.MenuItemRoom
 import com.example.littlelemon.R
 import com.example.littlelemon.routes.Profile
-import com.example.littlelemon.ui.theme.LittleLemonTheme
-import com.example.littlelemon.ui.theme.Primary
-import com.example.littlelemon.ui.theme.Secondary
-import com.example.littlelemon.ui.theme.Yellow
+import com.example.littlelemon.ui.theme.*
 
 @Composable
 fun HomeScreen(navController: NavController) {
     Column(horizontalAlignment = Alignment.CenterHorizontally , modifier = Modifier.fillMaxSize(1F)) {
-        header(navController)
-        about()
         val database = LittleLemonDatabase.getInstance(LocalContext.current)
         val databaseMenuItems =  database.menuItemDao().getAll().observeAsState(emptyList())
+        val search = remember { mutableStateOf("") }
+        val category = remember { mutableStateOf("") }
+        fun onChangeSearch(text:String){
+            search.value = text
 
-        MenuItemsList(items = databaseMenuItems.value)
+        }
+        fun onChangeCategory(text:String){
+            if(category.value == text){
+                category.value =""
+                return
+            }
+            category.value = text
+
+        }
+        var menuItems = databaseMenuItems.value
+        if(!category.value.isEmpty()){
+            menuItems = menuItems.filter { it.category.lowercase() == category.value.lowercase() }
+        }
+        if(!search.value.isBlank()){
+            menuItems = menuItems.filter { it.title.lowercase().contains(search.value.lowercase()) }
+        }
+        header(navController)
+        about(search.value,::onChangeSearch)
+        rowCategories(::onChangeCategory)
+        MenuItemsList(items = menuItems)
 
     }
 }
 
-
+@Composable
+fun rowCategories(onChangeCategory:(text:String)->Unit){
+    Text(text="ORDER FOR DELIVERY", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+    val list = listOf(
+        "Desserts", "Starters", "Mains", "Drinks"
+    )
+    LazyRow( modifier= Modifier.padding(10.dp,0.dp).fillMaxWidth(1F), horizontalArrangement = Arrangement.SpaceAround){
+        items(items = list, itemContent = { item ->
+            Button(onClick = {onChangeCategory(item)},colors = ButtonDefaults.buttonColors(backgroundColor = Gray)) {
+                Text(text = item, style = TextStyle(fontSize = 12.sp), color = Secondary, fontWeight = FontWeight.Bold)
+            }
+        })
+    }
+}
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 private fun MenuItemsList(items: List<MenuItemRoom>) {
@@ -66,7 +100,9 @@ private fun MenuItemsList(items: List<MenuItemRoom>) {
             items = items,
             itemContent = { menuItem ->
                 Card() {
-                    Row(modifier = Modifier.fillMaxWidth(1f).padding(8.dp)){
+                    Row(modifier = Modifier
+                        .fillMaxWidth(1f)
+                        .padding(8.dp)){
                         Column(Modifier.fillMaxWidth(0.75f)) {
 
                             Text(text="${menuItem.title}" , modifier =  Modifier.padding(0.dp,5.dp,0.dp,5.dp), fontSize = 14.sp)
@@ -119,13 +155,18 @@ fun header(navController: NavController){
 }
 
 @Composable
-fun about(){
+fun about(search:String,onChangeText:(text:String)->Unit){
     Column(modifier = Modifier
         .background(Secondary)
         .padding(10.dp, 10.dp)) {
         Text(text = stringResource(R.string.restaurant_name) , color = Yellow , fontSize = 18.sp , fontWeight = FontWeight.Bold)
         Text(text =stringResource(R.string.location),color = Color.White , fontSize = 14.sp ,)
-        Text(text = stringResource(R.string.description),color = Color.White , fontSize = 14.sp, modifier = Modifier.padding(0.dp,10.dp,0.dp,0.dp))
+        Text(text = stringResource(R.string.description),color = Color.White , fontSize = 14.sp, modifier = Modifier.padding(0.dp,10.dp,0.dp,10.dp))
+        TextField(value = search, onValueChange ={onChangeText(it)}  ,modifier= Modifier.background(Color.White), placeholder = { Text(
+                    stringResource(R.string.enter_search_phrase)
+                ) },leadingIcon = { Icon( imageVector = Icons.Default.Search, contentDescription = "") })
+
+
     }
 }
 @Preview(showBackground = true)
